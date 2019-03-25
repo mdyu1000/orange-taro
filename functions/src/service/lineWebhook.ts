@@ -1,9 +1,12 @@
 import * as functions from 'firebase-functions'
 import * as lineServices from "./line/lineServices"
 import * as queryString from "querystring"
+import * as util from 'util'
 
 import { LINE } from "../config"
 import { WebhookEvent, validateSignature } from "@line/bot-sdk"
+
+import * as locationServices from './line/locationServices'
 
 export const chatbotWebhook = functions.https.onRequest((req, res) => {
     const signature = req.headers["x-line-signature"] as string
@@ -24,24 +27,18 @@ const eventDispatcher = (event: WebhookEvent): void => {
 
     switch (event.type) {
         case "message":
+            console.log(util.inspect(event, false, null, true /* enable colors */))
             if (event.message.type == "text" && event.source.type != "group") {
                 const intent = event.message.text
                 actionDispatcher(userId, event.replyToken, intent, timestamp)
             }
             else if(event.message.type == "location"){
-
+                locationDispatcher(userId, event.replyToken, timestamp)
             }
             break
         case "postback":
             postbackDispatcher(userId, event.replyToken, event.postback)
             break
-        case "follow":
-            // follow(userId)
-            break
-        case "unfollow":
-            // unfollow(userId)
-            break
-
     }
 }
 
@@ -57,8 +54,9 @@ const actionDispatcher = (userId: string, replyToken: string, intent: string, ti
     }
 }
 
-const locationDispatcher = (userId: string, replyToken: string, intent: string, timestamp: number): void => {
-
+const locationDispatcher = (userId: string, replyToken: string, timestamp: number): void => {
+  const lineMessage = locationServices.replyViews()
+  lineServices.replyMessage(replyToken, lineMessage)
 }
 
 export const postbackDispatcher = (userId: string, replyToken:string, postbackData): void => {
