@@ -7,6 +7,8 @@ import { LINE } from "../config"
 import { WebhookEvent, validateSignature } from "@line/bot-sdk"
 
 import * as locationServices from './line/locationServices'
+import * as foodServices from './line/foodServices'
+import * as hotelServices from './line/hotelServices'
 
 export const chatbotWebhook = functions.https.onRequest((req, res) => {
     const signature = req.headers["x-line-signature"] as string
@@ -45,9 +47,13 @@ const eventDispatcher = (event: WebhookEvent): void => {
 const actionDispatcher = (userId: string, replyToken: string, intent: string, timestamp: number): void => {
     let lineMessage
     switch (intent) {
-        case "合作通路":
-            // lineMessage = marketingService.replyChannelImageMap()
-            // lineServices.replyMessage(replyToken, lineMessage)
+        case "美食鑑賞":
+            lineMessage = foodServices.replyFoods()
+            lineServices.replyMessage(replyToken, lineMessage)
+            break
+        case "旅宿推薦":
+            lineMessage = hotelServices.replyHotels()
+            lineServices.replyMessage(replyToken, lineMessage)
             break
         default:
             break
